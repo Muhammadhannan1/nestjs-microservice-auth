@@ -1,27 +1,34 @@
 import { Controller, Get } from '@nestjs/common';
 import { AppService } from './app.service';
 import { EventPattern, MessagePattern } from '@nestjs/microservices';
-import { RabbitSubscribe } from '@golevelup/nestjs-rabbitmq';
+import { RabbitSubscribe, RabbitRPC } from '@golevelup/nestjs-rabbitmq';
 @Controller()
 export class AppController {
   constructor(private readonly appService: AppService) {}
 
-  // @MessagePattern('signUp')
-  // handleUserCreated(data) {
-  //   return this.appService.createUser(data);
-  // }
-
-  @RabbitSubscribe({
+  @RabbitRPC({
     exchange: 'auth_exchange',
     routingKey: 'auth.signUp',
     queue: 'auth_signUp_queue',
+    queueOptions: {
+      messageTtl: 10000,
+      maxLength: 10,
+    },
   })
   handleSignUp(data: any) {
     console.log('Received sign-up data:', data);
     return this.appService.createUser(data);
   }
 
-  @MessagePattern('login')
+  @RabbitRPC({
+    exchange: 'auth_exchange',
+    routingKey: 'auth.login',
+    queue: 'auth_login_queue',
+    queueOptions: {
+      messageTtl: 10000,
+      maxLength: 10,
+    },
+  })
   handleUserLogin(data) {
     return this.appService.login(data);
   }

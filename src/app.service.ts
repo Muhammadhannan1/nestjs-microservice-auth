@@ -14,26 +14,30 @@ export class AppService {
   ) {}
 
   async createUser(data: any) {
-    try {
-      //   const alreadyExist = await this.userModel.findOne({email:data.email})
-      //   if(alreadyExist){
-      //     return {status:false,message:'Email already exists',data:null}
-      //   }
-      //   const salt = await genSalt(12);
-      //   const password = await hash(data.password, salt);
-      // await this.userModel.create({
-      //   name:data.name,
-      //   email:data.email,
-      //   password,
-      //   type:'User'
-      // })
-      console.log('data', data);
-      return { status: true, message: 'user created', data };
-    } catch (error) {
-      return { status: false, message: 'Internal server error', data: error };
+    // try {
+    const alreadyExist = await this.userModel.findOne({ email: data.email });
+    if (alreadyExist) {
+      return { status: false, message: 'Email already exists', data: null };
     }
-  }
 
+    const salt = await genSalt(12);
+    const password = await hash(data.password, salt);
+    const user = await this.userModel.create({
+      name: data.name,
+      email: data.email,
+      password,
+      type: 'User',
+    });
+    const token = this.generateToken(user);
+    return { status: true, message: 'User created', data: token };
+    // } catch (error) {
+    //   return { status: false, message: 'Internal server error', data: error };
+    // }
+  }
+  generateOTP() {
+    // Implement OTP generation logic here
+    return Math.floor(100000 + Math.random() * 900000).toString(); // Example OTP
+  }
   async login(data: any) {
     const user = await this.userModel.findOne({ email: data.email });
     if (!user) {
